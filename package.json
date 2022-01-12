@@ -1,0 +1,14 @@
+{
+  "name": "realworld-nuxt",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Can-Chen/realworld-nuxt.git",
+  "author": "can.chen <can.chen@airgram.io>",
+  "license": "MIT",
+  "dependencies": {
+    "nuxt": "^2.15.8"
+  },
+  "scripts": {
+    "dev": "nuxt"
+  }
+}
