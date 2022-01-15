@@ -12,22 +12,30 @@
           </p>
 
           <ul class="error-messages">
-            <li>That email is already taken</li>
+            <template v-for="(messages, field) in errors">
+              <li v-for="(message, index) in messages" :key="index">
+                {{ field }} {{ message }}
+              </li>
+            </template>
           </ul>
 
-          <form>
+          <form @submit.prevent="onSubmit()">
             <fieldset class="form-group" v-if="!isLogin">
               <input
                 class="form-control form-control-lg"
                 type="text"
                 placeholder="Your Name"
+                required
+                v-model="user.username"
               />
             </fieldset>
             <fieldset class="form-group">
               <input
                 class="form-control form-control-lg"
-                type="text"
+                type="email"
                 placeholder="Email"
+                v-model="user.email"
+                required
               />
             </fieldset>
             <fieldset class="form-group">
@@ -35,6 +43,9 @@
                 class="form-control form-control-lg"
                 type="password"
                 placeholder="Password"
+                v-model="user.password"
+                minlength="8"
+                required
               />
             </fieldset>
             <button class="btn btn-lg btn-primary pull-xs-right">
@@ -48,11 +59,49 @@
 </template>
 
 <script>
+import { login, register } from "../../api/user";
+
+/** 客户端 **/
+const Cookie = process.client ? require("js-cookie") : undefined;
+
 export default {
   name: "loginIndex",
   computed: {
     isLogin() {
       return this.$route.name === "login";
+    },
+  },
+  data() {
+    return {
+      user: {
+        password: "",
+        email: "",
+        username: "",
+      },
+      errors: {}, // 登录错误信息
+    };
+  },
+  methods: {
+    async onSubmit() {
+      try {
+        const { data } = this.isLogin
+          ? await login({
+              user: this.user,
+            })
+          : await register({
+              user: this.user,
+            });
+
+        // 存储登录状态 注意服务端渲染可能也要存储 只是单纯的存储在客户端可能无法满足业务需求
+        this.$store.commit("setUser", data.user);
+
+        // 为了防止刷新 数据丢失， 数据需要持久化
+        Cookie.set('user', JSON.stringify(data.user));
+
+        this.$router.push("/");
+      } catch (error) {
+        this.errors = error?.response?.data?.errors;
+      }
     },
   },
 };

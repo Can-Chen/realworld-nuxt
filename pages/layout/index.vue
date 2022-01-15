@@ -8,38 +8,42 @@
           <li class="nav-item">
             <!-- Add "active" class when you're on that page" -->
             <!-- 增加严格匹配 不然点击/:id 都会有这个路由规则  -->
-            <nuxt-link class="nav-link" to="/" exact >Home</nuxt-link>
+            <nuxt-link class="nav-link" to="/" exact>Home</nuxt-link>
           </li>
 
-          <li class="nav-item">
-            <nuxt-link class="nav-link" to="/editor">
-              <i class="ion-compose"></i>&nbsp;New Article
-            </nuxt-link>
-          </li>
+          <template v-if="user">
+            <li class="nav-item">
+              <nuxt-link class="nav-link" to="/editor">
+                <i class="ion-compose"></i>&nbsp;New Article
+              </nuxt-link>
+            </li>
 
-          <li class="nav-item">
-            <nuxt-link class="nav-link" to="/settings">
-              <i class="ion-gear-a"></i>&nbsp;Settings
-            </nuxt-link>
-          </li>
+            <li class="nav-item">
+              <nuxt-link class="nav-link" to="/settings">
+                <i class="ion-gear-a"></i>&nbsp;Settings
+              </nuxt-link>
+            </li>
 
-          <li class="nav-item">
-            <nuxt-link class="nav-link" to="/login">Sign in</nuxt-link>
-          </li>
+            <li class="nav-item">
+              <nuxt-link class="nav-link" to="/profile/123">
+                <img
+                  class="user-pic"
+                  :src="user.image"
+                />
+                {{ user.username }}
+              </nuxt-link>
+            </li>
+          </template>
 
-          <li class="nav-item">
-            <nuxt-link class="nav-link" to="/register">Sign up</nuxt-link>
-          </li>
+          <template v-else>
+            <li class="nav-item">
+              <nuxt-link class="nav-link" to="/login">Sign in</nuxt-link>
+            </li>
 
-          <li class="nav-item">
-            <nuxt-link class="nav-link" to="/profile/123">
-              <img
-                class="user-pic"
-                src="https://api.realworld.io/images/smiley-cyrus.jpeg"
-              />
-              chencan
-            </nuxt-link>
-          </li>
+            <li class="nav-item">
+              <nuxt-link class="nav-link" to="/register">Sign up</nuxt-link>
+            </li>
+          </template>
         </ul>
       </div>
     </nav>
@@ -65,12 +69,12 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   name: "LayoutIndex",
   computed: {
-    routeName() {
-      console.log(this.$route.name);
-    },
+    ...mapState(["user"]),
   },
 };
 </script>
