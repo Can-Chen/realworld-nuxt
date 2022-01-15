@@ -90,10 +90,12 @@
                 >
                   {{ article.author.username }}
                 </nuxt-link>
-                <span class="date">{{ article.createdAt }}</span>
+                <span class="date">{{ article.createdAt | date }}</span>
               </div>
               <button
                 class="btn btn-outline-primary btn-sm pull-xs-right"
+                @click="onFavorite(article)"
+                :disabled="article.disable"
                 :class="{
                   active: article.favorited,
                 }"
@@ -134,7 +136,7 @@
                     query: {
                       page: item,
                       tag: $route.query.tag,
-                      tab: tab,
+                      tab: tab, // 切换页码的时候和展示类型对应
                     },
                   }"
                   >{{ item }}</nuxt-link
@@ -155,7 +157,7 @@
                   name: 'home',
                   query: {
                     tag: item,
-                    tab: 'tag'
+                    tab: 'tag',
                   },
                 }"
                 v-for="item in tags"
@@ -173,9 +175,15 @@
 </template>
 
 <script>
-import { getArticles } from "../../api/article";
+import {
+  getArticles,
+  getFeedArticles,
+  addFavorite,
+  deleteFavorite,
+} from "../../api/article";
 import { getTags } from "../../api/tag";
 import { mapState } from "vuex";
+
 export default {
   name: "HomdeIndex",
   /** 属性更新，重新触发方法 **/
@@ -186,15 +194,34 @@ export default {
       return Math.ceil(this.articlesCount / this.limit);
     },
   },
+  methods: {
+    async onFavorite(article) {
+      article.disable = true;
+      if (article.favorited) {
+        await deleteFavorite(article.slug);
+        article.favorited = false;
+        article.favoritesCount += -1;
+      } else {
+        await addFavorite(article.slug);
+        article.favorited = true;
+        article.favoritesCount += 1;
+      }
+      article.disable = false;
+    },
+  },
   // 需要seo
-  async asyncData({ query }) {
+  async asyncData({ query, store }) {
     const limit = 1,
       page = Number.parseInt(query.page) || 1,
       { tag } = query,
-      tab = query.tab || "global_feed";
+      tab = query.tab || "global_feed",
+      { state } = store;
+
+    const loadArticles =
+      state.user && tab === "your_feed" ? getFeedArticles : getArticles;
 
     const [articleRes, tagRes] = await Promise.all([
-      getArticles({
+      loadArticles({
         limit,
         offset: (page - 1) * limit,
         tag: tag,
@@ -204,6 +231,10 @@ export default {
 
     const { articlesCount, articles } = articleRes.data,
       { tags } = tagRes.data;
+
+    // 点赞时因为网络原因可能导致点击和取消点赞连续点击时，出现不可预料的问题
+    // 在上次操作未结束前，取消掉操作事件，操作完成后再恢复
+    articles.forEach((article) => (article.disable = false));
 
     return {
       articlesCount,

@@ -25,12 +25,17 @@
             </li>
 
             <li class="nav-item">
-              <nuxt-link class="nav-link" to="/profile/123">
-                <img
-                  class="user-pic"
-                  :src="user.image"
-                />
-                {{ user.username }}
+              <nuxt-link
+                class="nav-link"
+                :to="{
+                  name: 'profile',
+                  params: {
+                    username: email,
+                  },
+                }"
+              >
+                <img class="user-pic" :src="image" />
+                {{ username }}
               </nuxt-link>
             </li>
           </template>
@@ -70,11 +75,32 @@
 
 <script>
 import { mapState } from "vuex";
+import { getUserInfo } from "../../api/user";
 
 export default {
   name: "LayoutIndex",
   computed: {
     ...mapState(["user"]),
+  },
+  data() {
+    return {
+      email: "",
+      username: "",
+      image: "",
+    };
+  },
+  async mounted() {
+    try {
+      const { data } = await getUserInfo();
+      const { email, image, username, bio } = data.user;
+      this.email = email;
+      this.image = image;
+      this.username = username;
+    } catch (error) {
+      this.email = this.user.email;
+      this.image = this.user.image;
+      this.username = this.user.username;
+    }
   },
 };
 </script>

@@ -1,4 +1,6 @@
-import request from "../utils/request";
+import {
+  request
+} from "../plugins/request";
 
 // 获取公共的文章列表
 export const getArticles = (params) => {
@@ -10,10 +12,64 @@ export const getArticles = (params) => {
 }
 
 
-export const getFeedArticles = (data) => {
+export const getFeedArticles = (params) => {
+  return request({
+    method: "GET",
+    url: '/api/articles/feed',
+    params
+  })
+}
+
+// 点赞
+export const addFavorite = (slug) => {
   return request({
     method: "POST",
-    url: '/api/articles/feed',
-    data
+    url: `/api/articles/${slug}/favorite`,
+  })
+}
+
+export const deleteFavorite = (slug) => {
+  return request({
+    method: "DELETE",
+    url: `/api/articles/${slug}/favorite`,
+  })
+}
+
+// 获取文章详情
+export const getArticleDetail = (slug) => {
+  return request({
+    method: "GET",
+    url: `/api/articles/${slug}`,
+  })
+}
+
+
+// 获取文章评论
+export const getArticleComments = (slug) => {
+  return request({
+    method: "GET",
+    url: `/api/articles/${slug}/comments`,
+  })
+}
+
+// 创建文章评论
+export const createArticleComment = (slug, comment) => {
+  return request({
+    method: "POST",
+    url: `/api/articles/${slug}/comments`,
+    data: {
+      comment
+    }
+  })
+}
+
+// 创建文章
+export const createArticle = (data) => {
+  return request({
+    method: "POST",
+    url: '/api/articles',
+    data: {
+      article: data
+    }
   })
 }

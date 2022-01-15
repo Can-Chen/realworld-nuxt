@@ -10,6 +10,7 @@
                   type="text"
                   class="form-control form-control-lg"
                   placeholder="Article Title"
+                  v-model="article.title"
                 />
               </fieldset>
               <fieldset class="form-group">
@@ -17,6 +18,7 @@
                   type="text"
                   class="form-control"
                   placeholder="What's this article about?"
+                  v-model="article.description"
                 />
               </fieldset>
               <fieldset class="form-group">
@@ -24,6 +26,7 @@
                   class="form-control"
                   rows="8"
                   placeholder="Write your article (in markdown)"
+                  v-model="article.body"
                 ></textarea>
               </fieldset>
               <fieldset class="form-group">
@@ -31,12 +34,14 @@
                   type="text"
                   class="form-control"
                   placeholder="Enter tags"
+                  v-model="article.tagList"
                 />
                 <div class="tag-list"></div>
               </fieldset>
               <button
                 class="btn btn-lg pull-xs-right btn-primary"
                 type="button"
+                @click="onSubmit()"
               >
                 Publish Article
               </button>
@@ -49,8 +54,31 @@
 </template>
 
 <script>
+import { createArticle } from "../../api/article";
 export default {
-  name: 'EditorIndex'
+  name: "EditorIndex",
+  data() {
+    return {
+      article: {
+        title: "",
+        description: "",
+        body: "",
+        tagList: [],
+      },
+    };
+  },
+  methods: {
+    async onSubmit() {
+      const { data } = await createArticle({
+        ...this.article,
+        tagList: [],
+      });
+
+      if (data?.article) {
+        this.$router.push(`/article/${data.article.slug}`);
+      }
+    },
+  },
 };
 </script>
 
