@@ -37,7 +37,7 @@
                     },
                   }"
                   exact
-                  class="nav-link active"
+                  class="nav-link"
                   :class="{ active: tab === 'My-Articles' }"
                 >
                   My Articles
@@ -74,11 +74,11 @@
                 :to="{
                   name: 'profile',
                   params: {
-                    username: article.author.username,
+                    username: username,
                   },
                 }"
               >
-                <img :src="article.author.image" />
+                <img :src="image" />
               </nuxt-link>
               <div class="info">
                 <nuxt-link
@@ -86,11 +86,11 @@
                   :to="{
                     name: 'profile',
                     params: {
-                      username: article.author.username,
+                      username: username,
                     },
                   }"
                 >
-                  {{ article.author.username }}
+                  {{ username }}
                 </nuxt-link>
                 <span class="date">{{ article.createdAt | date }}</span>
               </div>
@@ -116,7 +116,7 @@
             </nuxt-link>
           </div>
 
-          <!-- <nav>
+          <nav>
             <ul class="pagination">
               <li
                 class="page-item"
@@ -129,17 +129,20 @@
                 <nuxt-link
                   class="page-link"
                   :to="{
-                    name: 'home',
+                    name: 'profile',
                     query: {
                       page: item,
                       tab: tab, // 切换页码的时候和展示类型对应
+                    },
+                    params: {
+                      username: username,
                     },
                   }"
                   >{{ item }}</nuxt-link
                 >
               </li>
             </ul>
-          </nav> -->
+          </nav>
         </div>
       </div>
     </div>
@@ -155,7 +158,7 @@ export default {
   watchQuery: ["tab", "page"],
   computed: {
     totalPage() {
-      return Math.ceil(this.articlesCount / this.limit);
+      return Math.ceil(this.articlesCount / this.limit) || 0;
     },
     ...mapState(["user"]),
   },
@@ -168,12 +171,48 @@ export default {
       articlesCount: 0,
       articles: [],
       page: 1,
+      tab: 'My-Articles'
     };
   },
-  async mounted() {
-    const tab = this.$route.query?.tab || "My-Articles",
-      page = Number.parseInt(this.$router.query?.page) || 1,
-      limit = 1;
+  // async mounted() {
+  //   const tab = this.$route.query?.tab || "My-Articles",
+  //     page = Number.parseInt(this.$router.query?.page) || 1,
+  //     limit = 1;
+
+  //   const [userData, articleData] = await Promise.all([
+  //     getUserInfo(),
+  //     tab === "My-Articles"
+  //       ? await getArticles({
+  //           limit,
+  //           offset: (page - 1) * limit,
+  //           author: this.user.email,
+  //         })
+  //       : await getArticles({
+  //           limit,
+  //           offset: (page - 1) * limit,
+  //           favorited: this.user.email,
+  //         }),
+  //   ]);
+
+  //   const { image, username, email, bio } = userData.data.user;
+  //   const { articlesCount, articles = [] } = articleData.data;
+
+  //   this.image = image;
+  //   this.username = username || "123";
+  //   this.email = email;
+  //   this.bio = bio;
+  //   this.articlesCount = articlesCount;
+  //   this.articles = articles;
+  //   this.page = page;
+  //   this.tab = tab;
+  //   this.limit = limit;
+  // },
+
+  async asyncData({ query, store }) {
+    const tab = query?.tab || "My-Articles",
+      page = Number.parseInt(query?.page) || 1,
+      limit = 1,
+      { state } = store;
 
     const [userData, articleData] = await Promise.all([
       getUserInfo(),
@@ -181,27 +220,29 @@ export default {
         ? await getArticles({
             limit,
             offset: (page - 1) * limit,
-            author: this.user.email,
+            author: state.user.email,
           })
         : await getArticles({
             limit,
             offset: (page - 1) * limit,
-            favorited: this.user.email,
+            favorited: state.user.email,
           }),
     ]);
 
     const { image, username, email, bio } = userData.data.user;
     const { articlesCount, articles = [] } = articleData.data;
 
-    this.image = image;
-    this.username = username;
-    this.email = email;
-    this.bio = bio;
-    this.articlesCount = articlesCount;
-    this.articles = articles;
-    this.page = page;
-    this.tab = tab;
-    this.limit = limit;
+    return {
+      image: image,
+      username: username || "123",
+      email: email,
+      bio: bio,
+      articlesCount: articlesCount,
+      articles: articles,
+      page: page,
+      tab: tab,
+      limit: limit,
+    };
   },
 };
 </script>

@@ -235,7 +235,7 @@ export default {
     // 点赞时因为网络原因可能导致点击和取消点赞连续点击时，出现不可预料的问题
     // 在上次操作未结束前，取消掉操作事件，操作完成后再恢复
     articles.forEach((article) => (article.disable = false));
-
+    console.log('articles', articles)
     return {
       articlesCount,
       articles,

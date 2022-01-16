@@ -54,7 +54,11 @@
 </template>
 
 <script>
-import { createArticle } from "../../api/article";
+import {
+  createArticle,
+  updateArticle,
+  getArticleDetail,
+} from "../../api/article";
 export default {
   name: "EditorIndex",
   data() {
@@ -69,15 +73,29 @@ export default {
   },
   methods: {
     async onSubmit() {
-      const { data } = await createArticle({
-        ...this.article,
-        tagList: [],
-      });
+      const { data } = this.$route.params.title
+        ? await updateArticle(
+            { ...this.article, tagList: [] },
+            this.$route.params.title
+          )
+        : await createArticle({
+            ...this.article,
+            tagList: [],
+          });
 
       if (data?.article) {
         this.$router.push(`/article/${data.article.slug}`);
       }
     },
+  },
+  async mounted() {
+    if (this.$route.params.title) {
+      const { data } = await getArticleDetail(this.$route.params.title);
+      const { title, description, body } = data?.article;
+      this.article.title = title || "";
+      this.article.description = description || "";
+      this.article.body = body || "";
+    }
   },
 };
 </script>
