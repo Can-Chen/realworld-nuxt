@@ -62,25 +62,14 @@
             </ul>
           </div>
 
-          <div
-            class="article-preview"
-            v-for="article in articles"
-            :key="article.slug"
-          >
-            <div class="article-meta">
-              <nuxt-link
-                :to="{
-                  name: 'profile',
-                  params: {
-                    username: article.author.username,
-                  },
-                }"
-              >
-                <img :src="article.author.image" />
-              </nuxt-link>
-              <div class="info">
+          <template v-if="articles.length">
+            <div
+              class="article-preview"
+              v-for="article in articles"
+              :key="article.slug"
+            >
+              <div class="article-meta">
                 <nuxt-link
-                  class="author"
                   :to="{
                     name: 'profile',
                     params: {
@@ -88,35 +77,52 @@
                     },
                   }"
                 >
-                  {{ article.author.username }}
+                  <img :src="article.author.image" />
                 </nuxt-link>
-                <span class="date">{{ article.createdAt | date }}</span>
+                <div class="info">
+                  <nuxt-link
+                    class="author"
+                    :to="{
+                      name: 'profile',
+                      params: {
+                        username: article.author.username,
+                      },
+                    }"
+                  >
+                    {{ article.author.username }}
+                  </nuxt-link>
+                  <span class="date">{{ article.createdAt | date }}</span>
+                </div>
+                <button
+                  class="btn btn-outline-primary btn-sm pull-xs-right"
+                  @click="onFavorite(article)"
+                  :disabled="article.disable"
+                  :class="{
+                    active: article.favorited,
+                  }"
+                >
+                  <i class="ion-heart"></i> {{ article.favoritesCount }}
+                </button>
               </div>
-              <button
-                class="btn btn-outline-primary btn-sm pull-xs-right"
-                @click="onFavorite(article)"
-                :disabled="article.disable"
-                :class="{
-                  active: article.favorited,
+              <nuxt-link
+                class="preview-link"
+                :to="{
+                  name: 'article',
+                  params: {
+                    slug: article.slug,
+                  },
                 }"
               >
-                <i class="ion-heart"></i> {{ article.favoritesCount }}
-              </button>
+                <h1>{{ article.title }}</h1>
+                <p>{{ article.description }}</p>
+                <span>Read more...</span>
+              </nuxt-link>
             </div>
-            <nuxt-link
-              class="preview-link"
-              :to="{
-                name: 'article',
-                params: {
-                  slug: article.slug,
-                },
-              }"
-            >
-              <h1>{{ article.title }}</h1>
-              <p>{{ article.description }}</p>
-              <span>Read more...</span>
-            </nuxt-link>
-          </div>
+          </template>
+
+          <template v-else>
+            <span>暂无数据</span>
+          </template>
 
           <!-- 分页列表 -->
           <nav>
@@ -235,7 +241,6 @@ export default {
     // 点赞时因为网络原因可能导致点击和取消点赞连续点击时，出现不可预料的问题
     // 在上次操作未结束前，取消掉操作事件，操作完成后再恢复
     articles.forEach((article) => (article.disable = false));
-    console.log('articles', articles)
     return {
       articlesCount,
       articles,

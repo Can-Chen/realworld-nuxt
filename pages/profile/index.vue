@@ -9,12 +9,36 @@
             <p>
               {{ bio }}
             </p>
-            <nuxt-link
-              class="btn btn-sm btn-outline-secondary action-btn"
-              to="/settings"
-            >
-              <i class="ion-gear-a"></i> Edit Profile Settings
-            </nuxt-link>
+
+            <template v-if="username !== user.username">
+              <button
+                class="btn btn-sm action-btn btn-secondary"
+                :class="{
+                  disabled: isSubmitting,
+                  'btn-outline-secondary': !following,
+                  'btn-secondary': following,
+                }"
+                @click="submit()"
+              >
+                <template v-if="following">
+                  <i class="ion-plus-round"></i>
+                  &nbsp; Unfollow {{ username }}
+                </template>
+                <template v-else>
+                  <i class="ion-plus-round"></i>
+                  &nbsp; Follow {{ username }}
+                </template>
+              </button>
+            </template>
+
+            <template v-else>
+              <nuxt-link
+                class="btn btn-sm btn-outline-secondary action-btn"
+                to="/settings"
+              >
+                <i class="ion-gear-a"></i> Edit Profile Settings
+              </nuxt-link>
+            </template>
           </div>
         </div>
       </div>
@@ -64,25 +88,14 @@
             </ul>
           </div>
 
-          <div
-            class="article-preview"
-            v-for="article in articles"
-            :key="article.slug"
-          >
-            <div class="article-meta">
-              <nuxt-link
-                :to="{
-                  name: 'profile',
-                  params: {
-                    username: username,
-                  },
-                }"
-              >
-                <img :src="image" />
-              </nuxt-link>
-              <div class="info">
+          <template v-if="articles.length">
+            <div
+              class="article-preview"
+              v-for="article in articles"
+              :key="article.slug"
+            >
+              <div class="article-meta">
                 <nuxt-link
-                  class="author"
                   :to="{
                     name: 'profile',
                     params: {
@@ -90,31 +103,48 @@
                     },
                   }"
                 >
-                  {{ username }}
+                  <img :src="image" />
                 </nuxt-link>
-                <span class="date">{{ article.createdAt | date }}</span>
+                <div class="info">
+                  <nuxt-link
+                    class="author"
+                    :to="{
+                      name: 'profile',
+                      params: {
+                        username: username,
+                      },
+                    }"
+                  >
+                    {{ username }}
+                  </nuxt-link>
+                  <span class="date">{{ article.createdAt | date }}</span>
+                </div>
+                <button
+                  class="btn btn-outline-primary btn-sm pull-xs-right"
+                  disabled="true"
+                >
+                  <i class="ion-heart"></i> {{ article.favoritesCount }}
+                </button>
               </div>
-              <button
-                class="btn btn-outline-primary btn-sm pull-xs-right"
-                disabled="true"
+              <nuxt-link
+                class="preview-link"
+                :to="{
+                  name: 'article',
+                  params: {
+                    slug: article.slug,
+                  },
+                }"
               >
-                <i class="ion-heart"></i> {{ article.favoritesCount }}
-              </button>
+                <h1>{{ article.title }}</h1>
+                <p>{{ article.description }}</p>
+                <span>Read more...</span>
+              </nuxt-link>
             </div>
-            <nuxt-link
-              class="preview-link"
-              :to="{
-                name: 'article',
-                params: {
-                  slug: article.slug,
-                },
-              }"
-            >
-              <h1>{{ article.title }}</h1>
-              <p>{{ article.description }}</p>
-              <span>Read more...</span>
-            </nuxt-link>
-          </div>
+          </template>
+
+          <template v-else>
+            <span>暂无数据</span>
+          </template>
 
           <nav>
             <ul class="pagination">
@@ -151,7 +181,7 @@
 
 <script>
 import { getArticles } from "../../api/article";
-import { getUserInfo } from "../../api/user";
+import { getProfileInfo, putFollow, deleteFollow } from "../../api/user";
 import { mapState } from "vuex";
 export default {
   name: "UserProfile",
@@ -171,71 +201,59 @@ export default {
       articlesCount: 0,
       articles: [],
       page: 1,
-      tab: 'My-Articles'
+      tab: "My-Articles",
+      following: false,
+      isSubmitting: false,
     };
   },
-  // async mounted() {
-  //   const tab = this.$route.query?.tab || "My-Articles",
-  //     page = Number.parseInt(this.$router.query?.page) || 1,
-  //     limit = 1;
 
-  //   const [userData, articleData] = await Promise.all([
-  //     getUserInfo(),
-  //     tab === "My-Articles"
-  //       ? await getArticles({
-  //           limit,
-  //           offset: (page - 1) * limit,
-  //           author: this.user.email,
-  //         })
-  //       : await getArticles({
-  //           limit,
-  //           offset: (page - 1) * limit,
-  //           favorited: this.user.email,
-  //         }),
-  //   ]);
+  methods: {
+    async submit() {
+      try {
+        this.isSubmitting = true;
 
-  //   const { image, username, email, bio } = userData.data.user;
-  //   const { articlesCount, articles = [] } = articleData.data;
+        const { data } = this.following
+          ? await deleteFollow(this.username)
+          : await putFollow(this.username);
 
-  //   this.image = image;
-  //   this.username = username || "123";
-  //   this.email = email;
-  //   this.bio = bio;
-  //   this.articlesCount = articlesCount;
-  //   this.articles = articles;
-  //   this.page = page;
-  //   this.tab = tab;
-  //   this.limit = limit;
-  // },
+        if (data.profile) {
+          this.following = !this.following;
+        }
+      } catch (error) {
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+  },
 
-  async asyncData({ query, store }) {
+  async asyncData({ query, params, store }) {
     const tab = query?.tab || "My-Articles",
       page = Number.parseInt(query?.page) || 1,
       limit = 1,
       { state } = store;
 
     const [userData, articleData] = await Promise.all([
-      getUserInfo(),
+      getProfileInfo(params.username),
       tab === "My-Articles"
         ? await getArticles({
             limit,
             offset: (page - 1) * limit,
-            author: state.user.email,
+            author: params.username,
           })
         : await getArticles({
             limit,
             offset: (page - 1) * limit,
-            favorited: state.user.email,
+            favorited: params.username,
           }),
     ]);
 
-    const { image, username, email, bio } = userData.data.user;
-    const { articlesCount, articles = [] } = articleData.data;
+    const { image, username, following, bio } = userData.data?.profile || {};
+    const { articlesCount, articles = [] } = articleData?.data || {};
 
     return {
       image: image,
-      username: username || "123",
-      email: email,
+      username: username || state.user.username,
+      following,
       bio: bio,
       articlesCount: articlesCount,
       articles: articles,

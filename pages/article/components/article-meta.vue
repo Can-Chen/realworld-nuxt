@@ -43,35 +43,53 @@
       </button>
     </template>
 
-    <nuxt-link
-      class="btn btn-outline-secondary btn-sm"
-      :to="{
-        name: 'modify',
-        params: {
-          title: article.slug,
-        },
-      }"
-      v-else
-    >
-      <i class="ion-edit"></i> Edit Article
-    </nuxt-link>
+    <template v-else>
+      <nuxt-link
+        class="btn btn-outline-secondary btn-sm"
+        :to="{
+          name: 'modify',
+          params: {
+            title: article.slug,
+          },
+        }"
+      >
+        <i class="ion-edit"></i> Edit Article
+      </nuxt-link>
 
-    <!-- <nuxt-link
-      class="btn btn-outline-danger btn-sm"
-      ng-class="{disabled: $ctrl.isDeleting}"
-      ng-click="$ctrl.deleteArticle()"
-    >
-      <i class="ion-trash-a"></i> Delete Article
-    </nuxt-link> -->
+      <button
+        class="btn btn-outline-danger btn-sm"
+        :class="{ disabled: isDeleting }"
+        @click="clickDeleteArticle()"
+      >
+        <i class="ion-trash-a"></i> Delete Article
+      </button>
+    </template>
   </div>
 </template>
 
 <script>
 import { mapState } from "vuex";
+import { deleteArticle } from "../../../api/article";
 export default {
   name: "articleMeta",
+  data() {
+    return {
+      isDeleting: false,
+    };
+  },
   computed: {
     ...mapState(["user"]),
+  },
+  methods: {
+    async clickDeleteArticle() {
+      this.isDeleting = true;
+      const { errors } = await deleteArticle(this.article.slug);
+
+      if (!errors) {
+        this.$router.push("/");
+      }
+      this.isDeleting = false;
+    },
   },
   props: {
     article: {

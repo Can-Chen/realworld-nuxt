@@ -54,14 +54,17 @@ export default {
     };
   },
   async asyncData({ params }) {
-    const { data } = await getArticleDetail(params.slug);
+    const { data = {} } = await getArticleDetail(params.slug);
     const { article } = data;
 
-    const md = new MarkdownIt();
-    // 传输的是markdown类型的字符串
-    article.body = md.render(article.body);
+    if (data.article) {
+      const md = new MarkdownIt();
+      // 传输的是markdown类型的字符串
+      article.body = md.render(article.body);
+    }
+
     return {
-      article,
+      article: article || {},
     };
   },
 };

@@ -84,3 +84,11 @@ export const updateArticle = (data, slug) => {
     }
   })
 }
+
+// 删除文章
+export const deleteArticle = (slug) => {
+  return request({
+    method: "DELETE",
+    url: `/api/articles/${slug}`,
+  })
+}

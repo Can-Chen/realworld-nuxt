@@ -97,9 +97,9 @@ export default {
       this.image = image;
       this.username = username;
     } catch (error) {
-      this.email = this.user.email;
-      this.image = this.user.image;
-      this.username = this.user.username;
+      this.email = this.user?.email;
+      this.image = this.user?.image;
+      this.username = this.user?.username;
     }
   },
 };

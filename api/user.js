@@ -36,3 +36,24 @@ export const updateUserInfo = (data) => {
     }
   })
 }
+
+export const getProfileInfo = (username) => {
+  return request({
+    method: "GET",
+    url: `/api/profiles/${username}`
+  })
+}
+
+export const putFollow = (username) => {
+  return request({
+    method: "POST",
+    url: `/api/profiles/${username}/follow`
+  })
+}
+
+export const deleteFollow = (username) => {
+  return request({
+    method: "DELETE",
+    url: `/api/profiles/${username}/follow`
+  })
+}
